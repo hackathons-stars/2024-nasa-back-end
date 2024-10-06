@@ -1,4 +1,10 @@
-import express, { NextFunction, Request, Response, Router } from "express";
+import express, {
+  NextFunction,
+  request,
+  Request,
+  Response,
+  Router,
+} from "express";
 import cors from "cors";
 import axios from "axios";
 import OpenAI from "openai";
@@ -116,15 +122,18 @@ getWeatherData();
 
 app.get(
   "/chat",
-  asyncMiddleware(async (_request: Request, response: Response) => {
+  asyncMiddleware(async (request: Request, response: Response) => {
+    const { lat, lon, culture } = request.query;
+    const localInfos = await getLocalInfos(lat, lon);
+
     const params = {
-      culture: "Milho",
-      city: "Campo Mourão",
-      state: "Paraná",
-      country: "Brasil",
-      continent: "América do Sul",
-      latitude: -23.5505,
-      longitude: -46.6333,
+      culture: culture || "any",
+      city: localInfos.results[0].components.municipality,
+      state: localInfos.results[0].components.state,
+      country: localInfos.results[0].components.country,
+      continent: localInfos.results[0].components.continent,
+      latitude: lat || localInfos.results[0].geometry.lat,
+      longitude: lon || localInfos.results[0].geometry.lng,
     };
 
     try {
@@ -133,7 +142,7 @@ app.get(
       const processedData = processNasaData(nasaData);
       const weatherReport = generateWeatherReport(processedData);
       const aiResponse = await fetchOpenAICompletion(
-        params.culture,
+        String(params.culture),
         params.city,
         params.state,
         params.country,
@@ -230,6 +239,20 @@ function generateWeatherReport(data: {
 
   console.debug("Generated weather report:", prompt.trim());
   return prompt.trim();
+}
+
+async function getLocalInfos(lat: any, lon: any) {
+  console.log(`Buscando dados locais para lat: ${lat}, lon: ${lon}`);
+  const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat},${lon}&key=050c3862de804a2b990b34205fffc811`;
+
+  try {
+    const response = await axios.get(url);
+
+    return response.data;
+  } catch (error: any) {
+    console.log(`Erro ao buscar dados locais: ${error.message}`);
+    throw new Error(`Erro ao buscar dados locais: ${error}`);
+  }
 }
 
 async function fetchOpenAICompletion(
