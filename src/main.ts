@@ -48,7 +48,7 @@ router.get("/today", async (request, response) => {
   const url = "https://api.openweathermap.org/data/3.0/onecall";
 
   const parameters = {
-    lat, lon, appid: "a74c9dfe5765762d5e53a697c65505ac", ang: "pt_br", units: "metric"
+    lat, lon, appid: "a74c9dfe5765762d5e53a697c65505ac", lang: "pt_br", units: "metric"
   };
   try {
     const responseAPI = await axios.get(url, { params: parameters });
@@ -68,7 +68,7 @@ router.get("/overview", async (request, response) => {
   const url = "https://api.openweathermap.org/data/3.0/onecall/overview";
 
   const parameters = {
-    lat, lon, appid: "a74c9dfe5765762d5e53a697c65505ac", ang: "pt_br", units: "metric"
+    lat, lon, appid: "a74c9dfe5765762d5e53a697c65505ac", lang: "pt_br", units: "metric"
   };
   try {
     const responseAPI = await axios.get(url, { params: parameters });
